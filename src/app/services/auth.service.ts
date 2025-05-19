@@ -63,5 +63,18 @@ export class AuthService {
 
   public removeTokenFromLocalStorage() {
     window.localStorage.removeItem("jwtToken");
+    
+  }
+   public getAccessToken(): string | null {
+    return this.accessToken || localStorage.getItem('jwtToken');
+  }
+
+  // Call this when the app initializes
+  public initializeAuthState(): void {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      const data = { access_token: token };
+      this.loadProfile(data);
+    }
   }
 }

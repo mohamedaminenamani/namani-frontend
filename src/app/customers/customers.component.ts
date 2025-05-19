@@ -27,35 +27,37 @@ export class CustomersComponent implements OnInit {
     this.handleSearchCustomers();
   }
   handleSearchCustomers() {
-  const kw = this.searchFormGroup?.value.keyword;
-  this.customers = this.customerService.getCustomers(kw).pipe(
-    catchError(err => {
-      this.errorMessage = err.message;
-      return throwError(() => err);
-    })
-  );
-}
+    const kw = this.searchFormGroup?.value.keyword;
+    this.customers = this.customerService.getCustomers(kw).pipe(
+      catchError(err => {
+        this.errorMessage = err.message;
+        return throwError(() => err);
+      })
+    );
+  }
 
   handleDeleteCustomer(c: Customer) {
     let conf = confirm("Are you sure?");
-    if(!conf) return;
+    if (!conf) return;
     this.customerService.deleteCustomer(c.id).subscribe({
-      next : (resp) => {
-        this.customers=this.customers.pipe(
-          map(data=>{
-            let index=data.indexOf(c);
-            data.slice(index,1)
-            return data;
+      next: (resp) => {
+        this.customers = this.customers.pipe(
+          map(data => {
+            const updated = data.filter(item => item.id !== c.id);
+            return updated;
           })
         );
       },
-      error : err => {
+      error: err => {
         console.log(err);
       }
-    })
+    });
   }
-  
+
   handleCustomerAccounts(customer: Customer) {
     this.router.navigateByUrl("/customer-accounts/"+customer.id,{state :customer});
   }
 }
+
+
+

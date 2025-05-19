@@ -6,19 +6,25 @@ import {AuthService} from "../services/auth.service"; // Injecter AuthService [2
 @Injectable({
   providedIn: 'root'
 })
-export class AuthenticationGuard implements CanActivate { // Implémenter CanActivate [21]
-  constructor(private authService: AuthService, private router: Router) { // Injecter AuthService et Router [21, 35]
-  }
+export class AuthenticationGuard implements CanActivate {
+  constructor(private authService: AuthService, private router: Router) {}
 
-  canActivate( // [21]
-    route: ActivatedRouteSnapshot, // [21]
-    state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree { // [21]
-
-    if (this.authService.roles?.includes("ADMIN")) { // Vérifier si l'utilisateur est authentifié [21]
-      return true; // Autoriser l'accès [21]
-    } else {
-      this.router.navigateByUrl("/admin/notAuthorized"); // Rediriger vers la page de login si non authentifié [35]
-      return false; // Bloquer l'accès [35]
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+    
+    // First check if authenticated
+    if (!this.authService.isAuthenticated) {
+      this.router.navigateByUrl("/login");
+      return false;
     }
+    
+    // Then check for admin role if needed
+    if (route.data['roles'] && !this.authService.roles?.some(role => route.data['roles'].includes(role))) {
+      this.router.navigateByUrl("/admin/notAuthorized");
+      return false;
+    }
+    
+    return true;
   }
 }

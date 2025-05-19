@@ -14,20 +14,26 @@ import { Router } from '@angular/router';
 
 @Injectable()
 export class AppHttpInterceptor implements HttpInterceptor {
-
   constructor(private authService: AuthService, private router: Router) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-  const token = this.authService.accessToken;
+    // Skip for login request
+    if (request.url.includes('/auth/login')) {
+      return next.handle(request);
+    }
 
-  if (token) {
-    console.log('Token:', token); 
-    const clonedRequest = request.clone({
-      headers: request.headers.set('Authorization', 'Bearer ' + token)
-    });
-    return next.handle(clonedRequest).pipe(
+    const token = this.authService.getAccessToken();
+    
+    if (token) {
+      request = request.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+
+    return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        console.error('Error response:', error); // Affichez l'erreur pour le débogage
         if (error.status === 401) {
           this.authService.logout();
           this.router.navigate(['/login']);
@@ -36,10 +42,4 @@ export class AppHttpInterceptor implements HttpInterceptor {
       })
     );
   }
-
-  return next.handle(request);
 }
-
-}
-    
-   
